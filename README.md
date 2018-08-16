@@ -2,7 +2,7 @@
 
 Use: To airdrop TOKENS to the holders of a specific token. If configured, the script gives a bonus to the holders if they are voters of a specific SR.
 
-``Example: The total amount to airdrop is set to 1000 and there are 4 holders of the token. One of the holders is a voter of the SR and the bonus percentage for the voters is set to 50. The voter will receive a bonus of 50% compared to the other 3. In this example, the voter will receive 333 tokens and the other 3 will receive 222 tokens.``
+Example: The total amount to airdrop is set to 1000 and there are 4 holders of the token. One of the holders is a voter of the SR and the bonus percentage for the voters is set to 50. The voter will receive a bonus of 50% compared to the other 3. In this example, the voter will receive 333 tokens and the other 3 will receive 222 tokens.
 
 ## Configuration
 Edit config.json and modify the lines with your settings:
