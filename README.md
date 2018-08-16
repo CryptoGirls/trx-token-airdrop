@@ -1,35 +1,34 @@
 # TRX token distribution software
 
-Use: to distribute a fixed amount of TOKENS to the voters
+Use: To airdrop TOKENS to the holders of a specific token. If configured, the script gives a bonus to the holders if they are voters of a specific SR
+Example: The total amount to airdrop is set to 1000 and there are 4 holders of the token. One of the holders is a voter of the SR and the bonus percentage for the voters is set to 50. The voter will receive a bonus of 50% compared to the other 3. In this example, the voter will receive 333 tokens and the other 3 will receive 222 tokens.
 
 ## Configuration
-Edit config.json and config_snapshot.json and modify the lines with your settings:
+Edit config.json and modify the lines with your settings:
 
 - coin: TRX
-- token: token name
-- sraddress: Super Representative's address
+- token: token name. It will be used to get the holders' wallets that own this token
+- sraddress: Super Representative's address. This field is mandatory ONLY if you want to give a bonus to the SR's voters
 - owneraddress: The addres from where the token payments will be broadcasted
 - node: node where you get data
 - nodepay: node used for payments. It's recommended to change the nodepay to http://127.0.0.1:9000 after clone and install Rovak's docker containers repo (Please see the details in dependencies section)
-- percentage: always 100 - this script distributes a fixed amount of tokens, not a percentage
-- amount: total amount of tokens to distribute
-- minpayout: the minimum amount for a payout (NOTICE: in config_snapshot.json DO NOT modify minpayout)
+- amount: total amount of tokens to distribute (bonuses will be included in this amount)
+- percentagebonusforvoters: percentage you want to give as bonus to the SR's voters; 0 for no bonuses
+- minpayout: the minimum amount for a payout
 - pk: the private key of your address
-- saveindb: true if you want to save snapshots in your database
-- dbname: name of your database; not needed if saveindb is set to false
-- dbuser: user of your database; not needed if saveindb is set to false
-- dbpass: password of your database; not needed if saveindb is set to false
-- dbhost: localhost; not needed if saveindb is set to false
 - donations: a list of object (address: amount) for send static amount every payout
 - donationspercentage: a list of object (address: percentage) for send static percentage every payout
 - skip: a list of address to skip
 
-Edit poollogs.json and modify the lines with your settings:
-- lastpayout: the unixtimestamp of your last payout or the date of pool starting
+Edit the following line in accounts.js by replacing TOKEN_NAME with the token name:
 
-Edit the following line in votes.js with your SR address:
+let {data} = await xhr.get("https://api.tronscan.org/api/token/TOKEN_NAME/address", {
+
+Edit the following line in votes.js with the SR address (This is mandatory ONLY if you want to give a bonus to the SR's voters):
 
 const CANDIDATE_ADDRESS = '';
+
+
 
 
 ### Private pool
@@ -52,9 +51,9 @@ sudo apt-get install build-dep python-psycopg2
 
 sudo pip3 install psycopg2-binary
 
-git clone https://github.com/CryptoGirls/trx-token-pool
+git clone https://github.com/CryptoGirls/trx-token-airdrop
 
-cd trx-token-pool
+cd trx-token-airdrop
 
 sudo apt install nodejs
 
@@ -70,30 +69,6 @@ sudo apt-get install -y nodejs
 
 ```
 
-If you want to save snapshots in your database, create the following tables in your database:
-
-```
-create table voters(
-id SERIAL PRIMARY KEY,
-voterAddress varchar,
-votes float,
-votedOn int,
-prevDate int,
-insertDate int,
-toPay float,
-snapshotNo int);
-
-create table constants(
-id SERIAL PRIMARY KEY,
-name varchar,
-stringValue varchar,
-numberValue float,
-timestamp timestamp,
-prevDate int,
-insertDate int,
-snapshotNo int);
-```
-
 To not send the private key in plain text to the network, it's recommended to install and configure docker containers made by Rovak.
 
 ```
@@ -103,7 +78,7 @@ git clone https://github.com/tronscan/tronscan-docker
 
 ```
 
-In docker-compose.yml file put your SR IP in full and solidity IPs:
+In docker-compose.yml file put a full node IP in full and solidity IPs:
 
 ```
       NODE_FULL_IP: "YOUR_SR_IP_HERE"
@@ -125,17 +100,17 @@ Now you should be able to call the API from http://127.0.0.1:9000
 
 ## Running it
 
-1. At the start of each round - 4 times a day
+1. Run accounts.js for getting holders' wallets that own the token
+
+```node accounts.js```
+
+2. Run votes.js for getting SR's voters wallets (This is mandatory ONLY if you want to give a bonus to the SR's voters. Otherwise, skip this step):
 
 ```node votes.js```
 
-2. At the end of each round - 3 times a day (the script will calculate pending amounts)
+3. Run tokenairdrop.py (the script will create a file called "payments.sh")
 
-```python3 trxpool.py -c config_snapshot.json```
-
-3. At the end of the 4th round - once a day (the script will create a file called "payments.sh")
-
-```python3 trxpool.py```
+```python3 tokenairdrop.py```
 
 The file "payments.sh" will have all payments shell commands. Run this file with:
 
@@ -150,35 +125,20 @@ The scripts are also runnable by cron.
 
 - give rights to execute
 
+`chmod +x accounts.sh`
+
 `chmod +x voters.sh`
 
-`chmod +x trx.sh`
-
-`chmod +x trx24.sh`
+`chmod +x tokenairdrop.sh`
 
 - execute the scripts
 
+`./accounts.sh`
+
 `./voters.sh`
 
-`./trx.sh`
+`./tokenairdrop.sh`
 
-`./trx24.sh`
-
-
-## Command line usage
-
-```
-usage: trxpool.py [-h] [-c config.json] [-y] [--min-payout MINPAYOUT]
-
-TRX payments script
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -c config.json        set a config file (default: config.json)
-  -y                    automatic yes for log saving (default: no)
-  --min-payout MINPAYOUT
-                        override the minpayout value from config file
-```
 
 ## Author
 This software is created by lisk delegate "dakk", please consider a small donation if you
@@ -189,8 +149,7 @@ use this software:
 - "8691988869124917015R" for rise
 
 ## Features added by CryptoGirls
-- adapted the script for TRX
-- save snapshots of the votes in the database
+- adapted the script for TRX tokens airdrops
 
 Please consider a small donation if you use this software:
 - TRX: "TQk7fK1WfRqothSdTQBoYf7o81Byohzb1Y"
