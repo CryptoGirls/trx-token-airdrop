@@ -129,8 +129,6 @@ def estimatePayouts (log,voterslog,accountslog):
 			if z['voterAddress']==x['address']:
 				weight+=int(conf['percentagebonusforvoters'])/100
 		weight+=1
-				#print (x['address'])
-	#print ("total weight: "+str(weight))
 	totalweight=weight
 
 	for x in a['data']:
